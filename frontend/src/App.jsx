@@ -1,16 +1,34 @@
-import { useEffect, useState } from "react";
+import React from "react"; 
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom"; 
+import Home from "./components/Home"; 
+import Login from "./components/Login"; 
+import Register from "./components/Register"; 
+import ProtectedRoute from "./components/ProtectedRoute"; 
+// import CommunityPage from "./components/CommunityPage"; // Import the CommunityPage component
+// import LeaningPage from "./components/PlanManagement"
+// import CreateLearningPlan from "./components/CreateLearningPlan";
+import "./index.css";
 
 function App() {
-  const [message, setMessage] = useState("");
-
-  useEffect(() => {
-    fetch("http://localhost:8080/api/hello")
-      .then((res) => res.text())
-      .then(setMessage)
-      .catch(console.error);
-  }, []);
-
-  return <h1>{message}</h1>;
+  return (
+    <Router>
+      <Routes>
+        <Route
+          path="/"
+          element={
+            <ProtectedRoute>
+              <Home />
+            </ProtectedRoute>
+          }
+        />
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+        {/* <Route path="/community/:id" element={<CommunityPage />} />
+        <Route path="/learning" element={<LeaningPage />} />
+        <Route path="/create-learning-plan" element={<CreateLearningPlan />} /> */}
+      </Routes>
+    </Router>
+  );
 }
 
 export default App;
