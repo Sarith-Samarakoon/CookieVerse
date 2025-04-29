@@ -102,7 +102,29 @@ public class FoodCommunityController {
         return communityPostRepository.findByCommunityId(id);
     }
 
-   
+   @PostMapping("/{id}/leave")
+public FoodCommunity leaveCommunity(@PathVariable String id, @RequestParam String userName) {
+    Optional<FoodCommunity> optionalCommunity = foodCommunityRepository.findById(id);
+
+    if (optionalCommunity.isPresent()) {
+        FoodCommunity community = optionalCommunity.get();
+        List<String> members = community.getMembers();
+
+        if (members.contains(userName)) {
+            members.remove(userName);
+            community.setMembers(members);
+            return foodCommunityRepository.save(community);
+        } else {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "User is not a member of the community.");
+        }
+    } else {
+        throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Community not found");
+    }
+}
+
+
+
+
 
 
 }
