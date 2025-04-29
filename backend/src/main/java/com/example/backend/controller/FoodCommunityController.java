@@ -89,6 +89,20 @@ public class FoodCommunityController {
         }
     }
 
-    
+    // Create a post for a community
+    @PostMapping("/{id}/posts")
+    public CommunityPost createPost(@PathVariable String id, @RequestBody CommunityPost post) {
+        post.setCommunityId(id);
+        return communityPostRepository.save(post);
+    }
+
+    // Get posts for a specific community
+    @GetMapping("/{id}/posts")
+    public List<CommunityPost> getPostsByCommunity(@PathVariable String id) {
+        return communityPostRepository.findByCommunityId(id);
+    }
+
+   
+
 
 }
