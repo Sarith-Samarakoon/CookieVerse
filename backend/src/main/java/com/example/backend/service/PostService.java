@@ -25,7 +25,46 @@ public class PostService {
     @Autowired
     private UserRepository userRepository;
 
- 
+    // Get posts by email
+    public List<PostDTO> getPostsByUserEmail(String email) {
+        List<Post> posts = postRepository.findByUserEmail(email);
+
+        return posts.stream().map(post -> {
+            User user = userRepository.findByEmail(post.getUserEmail()).orElse(null);
+            String username = (user != null) ? user.getUsername() : "Unknown";
+
+            PostDTO postDTO = new PostDTO();
+            postDTO.setId(post.getId());
+            postDTO.setUserEmail(post.getUserEmail());
+            postDTO.setTitle(post.getTitle());
+            postDTO.setContent(post.getContent());
+            postDTO.setImage(post.getImage());
+            postDTO.setIsPublic(post.getIsPublic());
+            postDTO.setUsername(username);
+            return postDTO;
+        }).collect(Collectors.toList());
+    }
+
+    // Get only public posts
+    public List<PostDTO> getPublicPosts() {
+        List<Post> posts = postRepository.findByIsPublicTrue();
+
+        return posts.stream().map(post -> {
+            User user = userRepository.findByEmail(post.getUserEmail()).orElse(null);
+            String username = (user != null) ? user.getUsername() : "Unknown";
+
+            PostDTO postDTO = new PostDTO();
+            postDTO.setId(post.getId());
+            postDTO.setUserEmail(post.getUserEmail());
+            postDTO.setTitle(post.getTitle());
+            postDTO.setContent(post.getContent());
+            postDTO.setImage(post.getImage());
+            postDTO.setIsPublic(post.getIsPublic());
+            postDTO.setUsername(username);
+            return postDTO;
+        }).collect(Collectors.toList());
+    }
+
     // Create a post for the logged-in user
     public Post createPost(PostDTO dto) {
         if (dto.getUserEmail() == null || dto.getUserEmail().isEmpty()) {
