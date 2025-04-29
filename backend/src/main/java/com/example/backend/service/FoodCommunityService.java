@@ -51,6 +51,17 @@ public class FoodCommunityService {
         return null;
     }
 
-    
+    public FoodCommunity updateCommunity(String id, FoodCommunity updated) {
+        Optional<FoodCommunity> optionalCommunity = foodCommunityRepository.findById(id);
+        if (optionalCommunity.isPresent()) {
+            FoodCommunity community = optionalCommunity.get();
+            community.setName(updated.getName());
+            community.setDescription(updated.getDescription());
+            return foodCommunityRepository.save(community);
+        }
+        return null;
+    }
+
+
 }
 
