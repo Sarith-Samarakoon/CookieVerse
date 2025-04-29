@@ -63,7 +63,32 @@ public class FoodCommunityController {
         }
     }
 
-    
+    // Join a food community
+    @PostMapping("/{id}/join")
+    public FoodCommunity joinCommunity(@PathVariable String id, @RequestParam String userName) {
+        System.out.println("Joining community: " + id + " by " + userName);
 
+        Optional<FoodCommunity> optionalCommunity = foodCommunityRepository.findById(id);
+
+        if (optionalCommunity.isPresent()) {
+            FoodCommunity community = optionalCommunity.get();
+            List<String> members = community.getMembers();
+
+            if (!members.contains(userName)) {
+                members.add(userName);
+                community.setMembers(members);
+                System.out.println("Added member: " + userName);
+                return foodCommunityRepository.save(community);
+            } else {
+                System.out.println(userName + " is already a member.");
+                return community;
+            }
+        } else {
+            System.out.println("Community not found: " + id);
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Community not found");
+        }
+    }
+
+    
 
 }
