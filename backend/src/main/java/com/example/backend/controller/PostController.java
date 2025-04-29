@@ -19,6 +19,14 @@ public class PostController {
     @Autowired
     private PostService postService;
 
+        // Get all posts for the logged-in user
+        @GetMapping("/byLoggedInUser")
+        public List<PostDTO> getUserPostsByLoggedInUser() {
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            String userEmail = authentication.getName();
+            return postService.getPostsByUserEmail(userEmail);
+        }
+
     // Create a post for the logged-in user
     @PostMapping
     public Post createPost(@RequestBody PostDTO dto) {
