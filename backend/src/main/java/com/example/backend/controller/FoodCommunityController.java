@@ -161,7 +161,58 @@ public ResponseEntity<?> deleteCommunity(@PathVariable String id) {
     }
 }
 
+@PostMapping("/{communityId}/posts/{postId}/like")
+public ResponseEntity<?> likePost(@PathVariable String communityId,
+                                  @PathVariable String postId,
+                                  @RequestParam String userName) {
+    Optional<CommunityPost> postOptional = communityPostRepository.findById(postId);
 
+    if (postOptional.isPresent()) {
+        CommunityPost post = postOptional.get();
+
+        // If you are using a Set of Users for likes, ensure you're modifying it correctly
+        if (post.getLikedBy().contains(userName)) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body("User has already liked this post.");
+        }
+
+        post.getLikedBy().add(userName);  // Add the user to the set of users who liked the post
+        post.setLikes(post.getLikes() + 1);  // Increment the like count
+        communityPostRepository.save(post);
+
+        return ResponseEntity.ok("Post liked successfully.");
+    } else {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Post not found.");
+    }
+}
+
+
+// Add this method in your FoodCommunityController class
+@PostMapping("/{communityId}/posts/{postId}/unlike")
+public ResponseEntity<?> unlikePost(@PathVariable String communityId, 
+                                    @PathVariable String postId, 
+                                    @RequestParam String userName) {
+    Optional<CommunityPost> postOptional = communityPostRepository.findById(postId);
+    
+    if (postOptional.isPresent()) {
+        CommunityPost post = postOptional.get();
+
+        // Check if the user has liked the post
+        if (post.getLikedBy().contains(userName)) {
+            // Remove the user from the likedBy list
+            post.getLikedBy().remove(userName);
+            post.setLikes(post.getLikes() - 1);  // Decrement like count
+            communityPostRepository.save(post);  // Save the updated post
+
+            return ResponseEntity.ok("Post unliked successfully.");
+        } else {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                                 .body("User hasn't liked this post yet.");
+        }
+    } else {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Post not found.");
+    }
+}
 
 
 }
