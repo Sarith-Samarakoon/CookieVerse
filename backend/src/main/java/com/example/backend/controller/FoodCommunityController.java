@@ -38,6 +38,32 @@ public class FoodCommunityController {
         }
     }
 
+    // Get all food communities
+    @GetMapping
+    public List<FoodCommunity> getAllCommunities() {
+        try {
+            return foodCommunityRepository.findAll();
+        } catch (Exception e) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error fetching communities", e);
+        }
+    }
+
+    // Get a specific food community by ID
+    @GetMapping("/{id}")
+    public FoodCommunity getCommunityById(@PathVariable String id) {
+        try {
+            Optional<FoodCommunity> community = foodCommunityRepository.findById(id);
+            if (community.isPresent()) {
+                return community.get();
+            } else {
+                throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Community not found");
+            }
+        } catch (Exception e) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error fetching community", e);
+        }
+    }
+
     
+
 
 }
