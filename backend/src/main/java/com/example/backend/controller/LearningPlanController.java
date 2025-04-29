@@ -38,4 +38,15 @@ public class LearningPlanController {
         return plan.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
     }
 
+    // ✨ ADD THIS: Delete Learning Plan by ID
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteLearningPlan(@PathVariable String id) {
+        boolean deleted = learningPlanService.deleteLearningPlan(id);
+        if (deleted) {
+            return ResponseEntity.noContent().build(); // 204 No Content
+        } else {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
 }
