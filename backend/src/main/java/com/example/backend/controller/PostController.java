@@ -64,4 +64,14 @@ public ResponseEntity<Void> deletePost(@PathVariable String id) {
     return ResponseEntity.noContent().build();
 }
 
+
+// Update a post (title, content, image, etc.)
+@PutMapping("/{id}")
+public ResponseEntity<Post> updatePost(@PathVariable String id, @RequestBody PostDTO updatedDto) {
+    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+    String userEmail = authentication.getName();
+    Post updatedPost = postService.updatePost(id, updatedDto, userEmail);
+    return ResponseEntity.ok(updatedPost);
+}
+
 }
