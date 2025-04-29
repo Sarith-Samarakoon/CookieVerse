@@ -62,6 +62,15 @@ public class FoodCommunityService {
         return null;
     }
 
-
+    public boolean deleteCommunity(String id) {
+        Optional<FoodCommunity> optionalCommunity = foodCommunityRepository.findById(id);
+        if (optionalCommunity.isPresent()) {
+            FoodCommunity community = optionalCommunity.get();
+            community.cleanUpMembers();
+            foodCommunityRepository.deleteById(id);
+            return true;
+        }
+        return false;
+    }
 }
 
