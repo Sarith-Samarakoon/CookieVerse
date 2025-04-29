@@ -140,5 +140,28 @@ public ResponseEntity<FoodCommunity> updateCommunity(@PathVariable String id, @R
 }
 
 
+@DeleteMapping("/{id}")
+public ResponseEntity<?> deleteCommunity(@PathVariable String id) {
+    try {
+        Optional<FoodCommunity> optionalCommunity = foodCommunityRepository.findById(id);
+
+        if (optionalCommunity.isPresent()) {
+            FoodCommunity community = optionalCommunity.get();
+            community.cleanUpMembers();  // Clean up members before deleting the community
+            
+            foodCommunityRepository.deleteById(id);  // Delete the community by ID
+            return ResponseEntity.ok("Community deleted successfully.");
+        } else {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Community not found");
+        }
+    } catch (Exception e) {
+        // Log the error for debugging
+        e.printStackTrace();
+        throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error deleting community", e);
+    }
+}
+
+
+
 
 }
