@@ -49,4 +49,16 @@ public class LearningPlanController {
         }
     }
 
+    @PutMapping("/{id}")
+    public ResponseEntity<LearningPlan> updateLearningPlan(
+            @PathVariable String id, @RequestBody LearningPlan updatedPlan) {
+
+        LearningPlan updated = learningPlanService.updateLearningPlan(id, updatedPlan);
+
+        if (updated != null) {
+            return new ResponseEntity<>(updated, HttpStatus.OK);
+        } else {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND); // Plan not found
+        }
+    }
 }
