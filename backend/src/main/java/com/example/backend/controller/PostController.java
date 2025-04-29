@@ -36,6 +36,24 @@ public class PostController {
         return postService.createPost(dto);
     }
 
+
+    // Update the visibility of a post
+    @PutMapping("/{id}/visibility")
+    public ResponseEntity<Post> updateVisibility(@PathVariable String id, @RequestBody Map<String, Boolean> body) {
+        Boolean isPublic = body.get("isPublic");
+        if (isPublic == null) {
+            return ResponseEntity.badRequest().build();
+        }
+        Post updatedPost = postService.updateVisibility(id, isPublic);
+        return ResponseEntity.ok(updatedPost);
+    }
+
+    // Get only public posts for the home page
+    @GetMapping("/public")
+    public List<PostDTO> getPublicPosts() {
+        return postService.getPublicPosts();
+    }
+
  
 
 }
