@@ -26,5 +26,31 @@ public class FoodCommunityService {
         return foodCommunityRepository.findById(id);
     }
 
+    public FoodCommunity joinCommunity(String id, String userName) {
+        Optional<FoodCommunity> optionalCommunity = foodCommunityRepository.findById(id);
+        if (optionalCommunity.isPresent()) {
+            FoodCommunity community = optionalCommunity.get();
+            if (!community.getMembers().contains(userName)) {
+                community.getMembers().add(userName);
+                return foodCommunityRepository.save(community);
+            }
+            return community;
+        }
+        return null;
+    }
+
+    public FoodCommunity leaveCommunity(String id, String userName) {
+        Optional<FoodCommunity> optionalCommunity = foodCommunityRepository.findById(id);
+        if (optionalCommunity.isPresent()) {
+            FoodCommunity community = optionalCommunity.get();
+            if (community.getMembers().contains(userName)) {
+                community.getMembers().remove(userName);
+                return foodCommunityRepository.save(community);
+            }
+        }
+        return null;
+    }
+
+    
 }
 
