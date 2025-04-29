@@ -99,4 +99,48 @@ public class PostService {
         }
     }
 
+    
+// Update post
+public Post updatePost(String postId, PostDTO updatedDto, String userEmail) {
+    Optional<Post> postOptional = postRepository.findById(postId);
+    if (postOptional.isPresent()) {
+        Post post = postOptional.get();
+
+        // Ensure only the owner can update their post
+        if (!post.getUserEmail().equals(userEmail)) {
+            throw new AccessDeniedException("You do not have permission to update this post.");
+        }
+
+        // Update fields
+        post.setTitle(updatedDto.getTitle());
+        post.setContent(updatedDto.getContent());
+        post.setImage(updatedDto.getImage());
+        post.setIsPublic(updatedDto.getIsPublic());
+
+        return postRepository.save(post);
+    } else {
+        throw new PostNotFoundException("Post not found with id: " + postId);
+    }
+}
+
+    // Update visibility of the post
+    public Post updateVisibility(String postId, boolean isPublic) {
+        Optional<Post> postOptional = postRepository.findById(postId);
+        if (postOptional.isPresent()) {
+            Post post = postOptional.get();
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            String loggedInUserEmail = authentication.getName();
+
+            if (!post.getUserEmail().equals(loggedInUserEmail)) {
+                throw new AccessDeniedException("You do not have permission to update this post.");
+            }
+
+            post.setIsPublic(isPublic);
+            return postRepository.save(post);
+        } else {
+            throw new PostNotFoundException("Post not found with id: " + postId);
+        }
+    }
+
+
 }
