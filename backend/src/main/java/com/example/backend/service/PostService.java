@@ -82,6 +82,21 @@ public class PostService {
     }
 
 
-
+    // Delete a post
+    public void deletePost(String postId, String userEmail) {
+        Optional<Post> postOptional = postRepository.findById(postId);
+        if (postOptional.isPresent()) {
+            Post post = postOptional.get();
+    
+            // Ensure only the owner can delete their post
+            if (!post.getUserEmail().equals(userEmail)) {
+                throw new AccessDeniedException("You do not have permission to delete this post.");
+            }
+    
+            postRepository.deleteById(postId);
+        } else {
+            throw new PostNotFoundException("Post not found with id: " + postId);
+        }
+    }
 
 }
