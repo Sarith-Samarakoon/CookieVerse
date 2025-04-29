@@ -125,6 +125,20 @@ public FoodCommunity leaveCommunity(@PathVariable String id, @RequestParam Strin
 
 
 
+@PutMapping("/{id}")
+public ResponseEntity<FoodCommunity> updateCommunity(@PathVariable String id, @RequestBody FoodCommunity updatedCommunity) {
+    Optional<FoodCommunity> optionalCommunity = foodCommunityRepository.findById(id);
+    if (optionalCommunity.isPresent()) {
+        FoodCommunity community = optionalCommunity.get();
+        community.setName(updatedCommunity.getName());
+        community.setDescription(updatedCommunity.getDescription());
+        foodCommunityRepository.save(community);
+        return ResponseEntity.ok(community);
+    } else {
+        return ResponseEntity.notFound().build();
+    }
+}
+
 
 
 }
