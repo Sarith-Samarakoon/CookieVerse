@@ -614,7 +614,6 @@ const Home = () => {
               <div className="bg-white rounded-xl shadow-md p-6">
                 <h2 className="text-xl font-semibold text-gray-800 mb-4 flex items-center gap-2">
                   <span className="bg-orange-100 text-orange-600 p-2 rounded-full">
-                    🍽️
                   </span>
                   Food Communities
                 </h2>
