@@ -36,4 +36,21 @@ public class LikeCommentController {
         return ResponseEntity.ok("Comment added successfully.");
     }
 
+    @GetMapping("/likes/count/{postId}")
+    public ResponseEntity<Integer> getLikeCount(@PathVariable String postId) {
+        return ResponseEntity.ok(likeCommentService.getLikeCount(postId));
+    }
+
+    @GetMapping("/comments/{postId}")
+    public ResponseEntity<List<LikeComment>> getComments(@PathVariable String postId) {
+        return ResponseEntity.ok(likeCommentService.getComments(postId));
+    }
+
+    @GetMapping("/user-like/{postId}")
+    public ResponseEntity<Map<String, Boolean>> getUserLikeStatus(
+            @PathVariable String postId,
+            @RequestHeader("userId") String userId) {
+        return ResponseEntity.ok(likeCommentService.getUserLikeStatus(postId, userId));
+    }
+
 }
