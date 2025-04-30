@@ -55,4 +55,14 @@ public class LikeCommentService {
         return response;
     }
 
+    public void updateComment(String id, String userId, String newContent) {
+        LikeComment comment = likeCommentRepository.findById(id).orElse(null);
+        if (comment != null && comment.getUserId().equals(userId) && comment.getComment() != null) {
+            comment.setComment(newContent);
+            likeCommentRepository.save(comment);
+        } else {
+            throw new RuntimeException("Comment not found or you are not authorized to update it.");
+        }
+    }
+
 }
