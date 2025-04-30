@@ -71,4 +71,16 @@ public class LikeCommentController {
         }
     }
 
+    @DeleteMapping("/comment/{id}")
+    public ResponseEntity<String> deleteComment(
+            @PathVariable String id,
+            @RequestHeader("userId") String userId) {
+        try {
+            likeCommentService.deleteComment(id, userId);
+            return ResponseEntity.ok("Comment deleted successfully.");
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
+        }
+    }
+
 }
