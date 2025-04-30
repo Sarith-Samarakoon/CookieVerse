@@ -41,4 +41,18 @@ public class LikeCommentService {
         likeCommentRepository.save(comment);
     }
 
+    public int getLikeCount(String postId) {
+        return likeCommentRepository.countByPostIdAndLiked(postId, true);
+    }
+
+    public List<LikeComment> getComments(String postId) {
+        return likeCommentRepository.findByPostIdAndCommentIsNotNull(postId);
+    }
+
+    public Map<String, Boolean> getUserLikeStatus(String postId, String userId) {
+        Map<String, Boolean> response = new HashMap<>();
+        response.put("liked", likeCommentRepository.existsByPostIdAndUserIdAndLiked(postId, userId, true));
+        return response;
+    }
+
 }
