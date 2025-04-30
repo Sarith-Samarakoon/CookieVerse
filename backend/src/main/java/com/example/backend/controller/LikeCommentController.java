@@ -53,4 +53,22 @@ public class LikeCommentController {
         return ResponseEntity.ok(likeCommentService.getUserLikeStatus(postId, userId));
     }
 
+    @PutMapping("/comment/{id}")
+    public ResponseEntity<String> updateComment(
+            @PathVariable String id,
+            @RequestHeader("userId") String userId,
+            @RequestBody String newContent) {
+        try {
+            // Log userId for debugging
+            System.out.println("Received userId: " + userId);
+
+            likeCommentService.updateComment(id, userId, newContent);
+            return ResponseEntity.ok("Comment updated successfully.");
+        } catch (RuntimeException e) {
+            // Log the exception message for debugging
+            System.out.println("Error: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
+        }
+    }
+
 }
