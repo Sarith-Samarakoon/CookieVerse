@@ -26,4 +26,14 @@ public class LikeCommentController {
         return ResponseEntity.ok("Like status toggled successfully.");
     }
 
+    @PostMapping("/comment/{postId}")
+    public ResponseEntity<String> addComment(
+            @PathVariable String postId,
+            @RequestHeader("userId") String userId,
+            @RequestHeader("username") String username,
+            @RequestBody String commentContent) {
+        likeCommentService.addComment(postId, userId, username, commentContent);
+        return ResponseEntity.ok("Comment added successfully.");
+    }
+
 }
