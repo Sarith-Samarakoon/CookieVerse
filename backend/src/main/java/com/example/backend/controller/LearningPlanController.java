@@ -25,5 +25,18 @@ public class LearningPlanController {
         return new ResponseEntity<>(createdPlan, HttpStatus.CREATED);
     }
 
+    // Get all Learning Plans
+    @GetMapping
+    public List<LearningPlan> getAllLearningPlans() {
+        return learningPlanService.getAllLearningPlans();
+    }
+
+    // Get a Learning Plan by ID
+    @GetMapping("/{id}")
+    public ResponseEntity<LearningPlan> getLearningPlanById(@PathVariable String id) {
+        Optional<LearningPlan> plan = learningPlanService.getLearningPlanById(id);
+        return plan.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
     
 }
