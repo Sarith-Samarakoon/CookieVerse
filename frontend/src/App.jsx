@@ -6,7 +6,7 @@ import Register from "./components/Register";
 import ProtectedRoute from "./components/ProtectedRoute";
 import LearningPlans from "./components/LearningPlans";
 import LearningPlanDetails from "./components/LearningPlanDetails";
-import CreateLearningPlan from "./components/CreateLearningPlan";y
+import CreateLearningPlan from "./components/CreateLearningPlan";
 import UpdatePlanDetails from "./components/UpdateLearningPlan";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
