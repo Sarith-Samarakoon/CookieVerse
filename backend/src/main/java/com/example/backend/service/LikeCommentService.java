@@ -65,4 +65,12 @@ public class LikeCommentService {
         }
     }
 
+    public void deleteComment(String id, String userId) {
+        LikeComment comment = likeCommentRepository.findById(id).orElse(null);
+        if (comment != null && comment.getUserId().equals(userId) && comment.getComment() != null) {
+            likeCommentRepository.deleteById(id);
+        } else {
+            throw new RuntimeException("Comment not found or you are not authorized to delete it.");
+        }
+    }
 }
