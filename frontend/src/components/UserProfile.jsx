@@ -17,6 +17,8 @@ import { FiSettings, FiPlusCircle } from "react-icons/fi";
 import { GiCook, GiMeal, GiFoodTruck } from "react-icons/gi";
 import Navbar from "./Navbar";
 import axios from "axios";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 const UserProfile = () => {
   const [posts, setPosts] = useState([]);
@@ -76,8 +78,11 @@ const UserProfile = () => {
       });
       setPosts([res.data, ...posts]);
       setNewPost({ title: "", content: "", image: "", isPublic: true });
+
+      toast.success("Post created successfully!");
     } catch (error) {
       console.error("Error posting:", error);
+      toast.error("Failed to create post. Please try again.");
     } finally {
       setIsPosting(false);
     }
@@ -107,6 +112,7 @@ const UserProfile = () => {
       setPosts((prev) =>
         prev.map((post) => (post.id === res.data.id ? res.data : post))
       );
+
       setEditingPost({
         id: "",
         title: "",
@@ -114,9 +120,13 @@ const UserProfile = () => {
         image: "",
         isPublic: true,
       });
+
       document.getElementById("editModal").close();
+
+      toast.success("Post updated successfully!");
     } catch (error) {
       console.error("Error updating post:", error);
+      toast.error("Failed to update post. Please try again.");
     } finally {
       setIsEditing(false);
     }
@@ -151,8 +161,15 @@ const UserProfile = () => {
           post.id === id ? { ...post, isPublic: res.data.isPublic } : post
         )
       );
+
+      toast.success(
+        `Post visibility changed to ${
+          res.data.isPublic ? "Public" : "Private"
+        }!`
+      );
     } catch (error) {
       console.error("Error updating visibility:", error);
+      toast.error("Failed to update visibility. Try again.");
     }
   };
 
@@ -166,8 +183,10 @@ const UserProfile = () => {
           },
         });
         setPosts(posts.filter((post) => post.id !== id));
+        toast.success("Post deleted successfully!");
       } catch (error) {
         console.error("Error deleting post:", error);
+        toast.error("Failed to delete post. Try again.");
       }
     }
   };
@@ -176,8 +195,10 @@ const UserProfile = () => {
     const newLikedPosts = new Set(likedPosts);
     if (newLikedPosts.has(postId)) {
       newLikedPosts.delete(postId);
+      toast.info("Unliked the post.");
     } else {
       newLikedPosts.add(postId);
+      toast.success("Liked the post!");
     }
     setLikedPosts(newLikedPosts);
   };
@@ -186,8 +207,10 @@ const UserProfile = () => {
     const newSavedPosts = new Set(savedPosts);
     if (newSavedPosts.has(postId)) {
       newSavedPosts.delete(postId);
+      toast.info("Removed from saved posts.");
     } else {
       newSavedPosts.add(postId);
+      toast.success("Post saved!");
     }
     setSavedPosts(newSavedPosts);
   };
@@ -195,8 +218,8 @@ const UserProfile = () => {
   return (
     <>
       <Navbar />
+      <ToastContainer position="top-right" autoClose={3000} />
       <div className="min-h-screen bg-amber-50 pb-20">
-        {/* Profile Header */}
         <div className="bg-gradient-to-r from-amber-400 to-amber-500 pt-16 pb-24 px-4 sm:px-6 lg:px-8">
           <div className="max-w-4xl mx-auto">
             <div className="flex flex-col md:flex-row items-center gap-6 relative">

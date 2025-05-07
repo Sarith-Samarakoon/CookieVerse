@@ -7,9 +7,10 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import LearningPlans from "./components/LearningPlans";
 import LearningPlanDetails from "./components/LearningPlanDetails";
 import CreateLearningPlan from "./components/CreateLearningPlan";
+import CommunityPage from "./components/CommunityPage";
+import ProfilePage from "./components/UserProfile";
 import UpdatePlanDetails from "./components/UpdateLearningPlan";
-import { ToastContainer } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
+
 import "./index.css";
 
 function App() {
@@ -27,18 +28,19 @@ function App() {
           />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/community/:id" element={<CommunityPage />} />
           <Route path="/learning" element={<LearningPlans />} />
           <Route path="/learning-plan/:id" element={<LearningPlanDetails />} />
           <Route
             path="/edit-learning-plan/:id"
             element={<UpdatePlanDetails />}
           />
+          <Route path="/profile" element={<ProfilePage />} />
           <Route
             path="/create-learning-plan"
             element={<CreateLearningPlan />}
           />
         </Routes>
-        <ToastContainer position="top-right" autoClose={3000} />
       </>
     </Router>
   );
