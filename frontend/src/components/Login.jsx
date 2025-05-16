@@ -3,16 +3,19 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { GoogleLogin } from "@react-oauth/google";
 import { jwtDecode } from "jwt-decode";
+import LoadingSpinner from "../components/LoadingSpinner"; // import your loading spinner with logo
 
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
+  const [isLoading, setIsLoading] = useState(false); // loading state
   const navigate = useNavigate();
 
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
+      setIsLoading(true); // Start showing loading spinner
       const res = await axios.post("http://localhost:8080/api/auth/login", {
         email,
         password,
@@ -28,14 +31,20 @@ const Login = () => {
       if (rememberMe) {
         localStorage.setItem("rememberedEmail", email);
       }
-      navigate("/");
+
+      // Simulate loading for a moment before navigating
+      setTimeout(() => {
+        navigate("/");
+      }, 1500); // 1.5 seconds
     } catch (err) {
+      setIsLoading(false); // Stop loading if error
       alert("Login failed");
     }
   };
 
   const handleGoogleSuccess = async (credentialResponse) => {
     try {
+      setIsLoading(true);
       const token = credentialResponse.credential;
       const decoded = jwtDecode(token);
 
@@ -50,12 +59,20 @@ const Login = () => {
 
       localStorage.setItem("token", jwt);
       localStorage.setItem("username", username);
-      navigate("/");
+
+      setTimeout(() => {
+        navigate("/");
+      }, 1500);
     } catch (err) {
+      setIsLoading(false);
       alert("Google login failed");
       console.error(err);
     }
   };
+
+  if (isLoading) {
+    return <LoadingSpinner message="Logging you in..." />; // show spinner while loading
+  }
 
   return (
     <div className="min-h-screen flex bg-white">
