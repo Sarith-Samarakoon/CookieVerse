@@ -1,9 +1,10 @@
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
 
-const CreateLearningPlan = () => {
+const UpdateLearningPlan = () => {
   const navigate = useNavigate();
+  const { id } = useParams(); // Get the plan ID from the URL params
   const [plan, setPlan] = useState({
     title: "",
     goal: "",
@@ -11,6 +12,28 @@ const CreateLearningPlan = () => {
     image: "",
     steps: [{ topic: "", resources: "", timeline: "" }],
   });
+
+  // Fetch the learning plan data to update
+  useEffect(() => {
+    const fetchLearningPlan = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const response = await axios.get(
+          `http://localhost:8080/api/learningplans/${id}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+        setPlan(response.data); // Set the fetched plan data
+      } catch (error) {
+        console.error("Error fetching learning plan:", error);
+        alert("Failed to fetch learning plan.");
+      }
+    };
+    fetchLearningPlan();
+  }, [id]);
 
   const handleStepChange = (index, field, value) => {
     const updatedSteps = [...plan.steps];
@@ -37,40 +60,46 @@ const CreateLearningPlan = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Retrieve the token from localStorage or other source
-    const token = localStorage.getItem("token"); // or use context if needed
-
+    const token = localStorage.getItem("token");
     if (!token) {
       alert("No token found. Please log in.");
       return;
     }
 
-    // Construct the learning plan object to be sent to the backend
     const learningPlanData = {
       title: plan.title,
       goal: plan.goal,
       skills: plan.skills,
-      image: plan.image,
+      image: plan.image, // Ensure it's a URL or Base64 if applicable
       steps: plan.steps,
     };
 
     try {
-      // Make POST request to backend API
-      const response = await axios.post(
-        "http://localhost:8080/api/learningplans",
+      const response = await axios.put(
+        `http://localhost:8080/api/learningplans/${id}`,
         learningPlanData,
         {
           headers: {
             Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
           },
         }
       );
 
-      console.log("Learning Plan Created:", response.data);
-      navigate("/learning"); // Navigate to learning plans page
+      if (response.status === 200) {
+        console.log("Learning Plan Updated:", response.data);
+        alert("Your learning plan has been successfully updated!");
+        navigate("/learning");
+      } else {
+        alert("Unexpected response from server.");
+      }
     } catch (error) {
-      console.error("Error creating learning plan:", error);
-      alert("There was an error creating your learning plan.");
+      console.error("Error updating learning plan:", error);
+      if (error.response && error.response.status === 404) {
+        alert("Learning plan not found. It may have been deleted.");
+      } else {
+        alert("There was an error updating your learning plan.");
+      }
     }
   };
 
@@ -78,7 +107,7 @@ const CreateLearningPlan = () => {
     <div className="min-h-screen bg-gradient-to-tr from-[#E0F7FA] via-[#FFF3E0] to-[#FFE0B2] flex justify-center items-center p-6">
       <div className="w-full max-w-5xl bg-white p-10 rounded-3xl shadow-2xl">
         <h2 className="text-4xl font-bold text-center text-[#F97316] mb-10">
-          🧠 Create Your Professional Learning Plan
+          🧠 Update Your Professional Learning Plan
         </h2>
 
         <form onSubmit={handleSubmit} className="space-y-10">
@@ -152,6 +181,7 @@ const CreateLearningPlan = () => {
               )}
             </div>
           </section>
+
           {/* Plan Steps */}
           <section>
             <h3 className="text-2xl font-semibold text-[#4B5563] mb-6">
@@ -239,7 +269,7 @@ const CreateLearningPlan = () => {
               type="submit"
               className="px-6 py-3 rounded-lg bg-[#F97316] text-white font-semibold hover:bg-[#FF9F00] transition"
             >
-              Save Plan
+              Update Plan
             </button>
           </div>
         </form>
@@ -248,4 +278,4 @@ const CreateLearningPlan = () => {
   );
 };
 
-export default CreateLearningPlan;
+export default UpdateLearningPlan;

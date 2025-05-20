@@ -32,19 +32,21 @@ public class SecurityConfig {
         JwtAuthenticationFilter jwtFilter = new JwtAuthenticationFilter(jwtService);
 
         http
-            .cors().and()
-            .csrf().disable()
-            .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS) // No session
-            .and()
-            .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/auth/**").permitAll() // Allow login/register without token
-                .requestMatchers("/api/communities/**").permitAll() // <--- add this line
-                .requestMatchers("/api/posts/**").permitAll() // <--- add this line
-                .requestMatchers("/api/learningplans/**").permitAll() // <--- add this line
-                
-                .anyRequest().authenticated() // Everything else needs auth
-            )
-            .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class); // Add our JWT filter
+                .cors().and()
+                .csrf().disable()
+                .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS) // No session
+                .and()
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/api/auth/**").permitAll() // Allow login/register without token
+                        .requestMatchers("/api/communities/**").permitAll() // <--- add this line
+                        .requestMatchers("/api/posts/**").permitAll() // <--- add this line
+                        .requestMatchers("/api/learningplans/**").permitAll() // <--- add this line
+                        .requestMatchers("/api/likecomment/**").permitAll() // <--- add this line
+                        .requestMatchers("/api/status/**").permitAll()
+
+                        .anyRequest().authenticated() // Everything else needs auth
+                )
+                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class); // Add our JWT filter
 
         return http.build();
     }
