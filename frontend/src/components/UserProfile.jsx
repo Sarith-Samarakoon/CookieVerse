@@ -12,27 +12,36 @@ import {
   FaBookmark,
   FaRegBookmark,
   FaTimes,
+  FaChevronLeft,
+  FaChevronRight,
 } from "react-icons/fa";
 import { FiSettings, FiPlusCircle } from "react-icons/fi";
 import { GiCook, GiMeal, GiFoodTruck } from "react-icons/gi";
 import Navbar from "./Navbar";
 import axios from "axios";
+import { createClient } from "@supabase/supabase-js";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+
+// Initialize Supabase client
+const supabase = createClient(
+  "https://ikooiqeerabavauzgeeo.supabase.co",
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlrb29pcWVlcmFiYXZhdXpnZWVvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQ1MzQ3OTMsImV4cCI6MjA2MDExMDc5M30.ao4h_29v83Fyt6l2GfMN60zsj69JYy6nScmaaoCyqzo"
+);
 
 const UserProfile = () => {
   const [posts, setPosts] = useState([]);
   const [newPost, setNewPost] = useState({
     title: "",
     content: "",
-    image: "",
+    images: [],
     isPublic: true,
   });
   const [editingPost, setEditingPost] = useState({
     id: "",
     title: "",
     content: "",
-    image: "",
+    images: [],
     isPublic: true,
   });
   const [user, setUser] = useState({});
@@ -41,8 +50,9 @@ const UserProfile = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [likedPosts, setLikedPosts] = useState(new Set());
   const [savedPosts, setSavedPosts] = useState(new Set());
+  const [currentSlide, setCurrentSlide] = useState({});
 
-  // Fetch user details and posts using token
+  // Fetch user details and posts
   useEffect(() => {
     const token = localStorage.getItem("token");
     const name = localStorage.getItem("name");
@@ -56,14 +66,61 @@ const UserProfile = () => {
 
       axios
         .get("http://localhost:8080/api/posts/byLoggedInUser", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          headers: { Authorization: `Bearer ${token}` },
         })
-        .then((res) => setPosts(res.data))
+        .then((res) => {
+          // Ensure images are arrays
+          const formattedPosts = res.data.map((post) => ({
+            ...post,
+            images: Array.isArray(post.images)
+              ? post.images
+              : JSON.parse(post.images || "[]"),
+          }));
+          setPosts(formattedPosts);
+        })
         .catch((err) => console.error("Error fetching posts:", err));
     }
   }, []);
+
+  // Handle image upload to Supabase
+  const handleImageUpload = async (files, isEdit = false, index = null) => {
+    const uploadedUrls = [];
+    const maxImages = 3;
+    const currentImages = isEdit ? editingPost.images : newPost.images;
+
+    if (currentImages.length + files.length > maxImages) {
+      toast.error(`You can upload a maximum of ${maxImages} images.`);
+      return currentImages;
+    }
+
+    for (const file of files) {
+      const fileName = `${Date.now()}_${file.name}`;
+      const { data, error } = await supabase.storage
+        .from("foodies")
+        .upload(`public/${fileName}`, file);
+
+      if (error) {
+        console.error("Upload error:", error);
+        toast.error("Failed to upload image.");
+        return currentImages;
+      }
+
+      const { data: publicUrlData } = supabase.storage
+        .from("foodies")
+        .getPublicUrl(`public/${fileName}`);
+
+      uploadedUrls.push(publicUrlData.publicUrl);
+    }
+
+    if (isEdit && index !== null) {
+      // Update specific image
+      const updatedImages = [...currentImages];
+      updatedImages[index] = uploadedUrls[0];
+      return updatedImages;
+    }
+
+    return [...currentImages, ...uploadedUrls];
+  };
 
   const handlePostSubmit = async (e) => {
     e.preventDefault();
@@ -71,18 +128,19 @@ const UserProfile = () => {
     const token = localStorage.getItem("token");
 
     try {
-      const res = await axios.post("http://localhost:8080/api/posts", newPost, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      setPosts([res.data, ...posts]);
-      setNewPost({ title: "", content: "", image: "", isPublic: true });
-
+      const res = await axios.post(
+        "http://localhost:8080/api/posts",
+        { ...newPost, images: JSON.stringify(newPost.images) },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      setPosts([{ ...res.data, images: newPost.images }, ...posts]);
+      setNewPost({ title: "", content: "", images: [], isPublic: true });
       toast.success("Post created successfully!");
     } catch (error) {
       console.error("Error posting:", error);
-      toast.error("Failed to create post. Please try again.");
+      toast.error("Failed to create post.");
     } finally {
       setIsPosting(false);
     }
@@ -96,37 +154,31 @@ const UserProfile = () => {
     try {
       const res = await axios.put(
         `http://localhost:8080/api/posts/${editingPost.id}`,
+        { ...editingPost, images: JSON.stringify(editingPost.images) },
         {
-          title: editingPost.title,
-          content: editingPost.content,
-          image: editingPost.image,
-          isPublic: editingPost.isPublic,
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          headers: { Authorization: `Bearer ${token}` },
         }
       );
 
       setPosts((prev) =>
-        prev.map((post) => (post.id === res.data.id ? res.data : post))
+        prev.map((post) =>
+          post.id === res.data.id
+            ? { ...res.data, images: editingPost.images }
+            : post
+        )
       );
-
       setEditingPost({
         id: "",
         title: "",
         content: "",
-        image: "",
+        images: [],
         isPublic: true,
       });
-
       document.getElementById("editModal").close();
-
       toast.success("Post updated successfully!");
     } catch (error) {
       console.error("Error updating post:", error);
-      toast.error("Failed to update post. Please try again.");
+      toast.error("Failed to update post.");
     } finally {
       setIsEditing(false);
     }
@@ -137,7 +189,7 @@ const UserProfile = () => {
       id: post.id,
       title: post.title,
       content: post.content,
-      image: post.image,
+      images: post.images,
       isPublic: post.isPublic,
     });
     document.getElementById("editModal").showModal();
@@ -149,11 +201,7 @@ const UserProfile = () => {
       const res = await axios.put(
         `http://localhost:8080/api/posts/${id}/visibility`,
         { isPublic: !currentVisibility },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
+        { headers: { Authorization: `Bearer ${token}` } }
       );
 
       setPosts((prev) =>
@@ -161,7 +209,6 @@ const UserProfile = () => {
           post.id === id ? { ...post, isPublic: res.data.isPublic } : post
         )
       );
-
       toast.success(
         `Post visibility changed to ${
           res.data.isPublic ? "Public" : "Private"
@@ -169,7 +216,7 @@ const UserProfile = () => {
       );
     } catch (error) {
       console.error("Error updating visibility:", error);
-      toast.error("Failed to update visibility. Try again.");
+      toast.error("Failed to update visibility.");
     }
   };
 
@@ -178,15 +225,13 @@ const UserProfile = () => {
       const token = localStorage.getItem("token");
       try {
         await axios.delete(`http://localhost:8080/api/posts/${id}`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          headers: { Authorization: `Bearer ${token}` },
         });
         setPosts(posts.filter((post) => post.id !== id));
         toast.success("Post deleted successfully!");
       } catch (error) {
         console.error("Error deleting post:", error);
-        toast.error("Failed to delete post. Try again.");
+        toast.error("Failed to delete post.");
       }
     }
   };
@@ -213,6 +258,22 @@ const UserProfile = () => {
       toast.success("Post saved!");
     }
     setSavedPosts(newSavedPosts);
+  };
+
+  const handleSlideChange = (postId, direction) => {
+    const post = posts.find((p) => p.id === postId);
+    if (!post || !post.images.length) return;
+
+    const currentIndex = currentSlide[postId] || 0;
+    let newIndex;
+
+    if (direction === "next") {
+      newIndex = (currentIndex + 1) % post.images.length;
+    } else {
+      newIndex = (currentIndex - 1 + post.images.length) % post.images.length;
+    }
+
+    setCurrentSlide((prev) => ({ ...prev, [postId]: newIndex }));
   };
 
   return (
@@ -270,9 +331,7 @@ const UserProfile = () => {
           </div>
         </div>
 
-        {/* Main Content */}
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 -mt-12">
-          {/* Tabs */}
           <div className="flex border-b border-amber-200">
             <button
               onClick={() => setActiveTab("posts")}
@@ -296,7 +355,6 @@ const UserProfile = () => {
             </button>
           </div>
 
-          {/* New Post Card */}
           <div className="bg-white rounded-xl shadow-md p-6 mb-6 mt-6 border border-amber-100">
             <div className="flex items-center gap-3 mb-4">
               <img
@@ -334,15 +392,44 @@ const UserProfile = () => {
 
               <div className="flex items-center justify-between">
                 <input
-                  type="url"
-                  value={newPost.image}
+                  type="file"
+                  accept="image/*"
+                  multiple
                   onChange={(e) =>
-                    setNewPost({ ...newPost, image: e.target.value })
+                    handleImageUpload(e.target.files).then((urls) =>
+                      setNewPost({ ...newPost, images: urls })
+                    )
                   }
-                  placeholder="Add a photo URL of your dish"
-                  className="flex-1 px-4 py-3 border border-amber-200 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                  className="flex-1 px-4 py-3 border border-amber-200 rounded-lg"
                 />
               </div>
+              {newPost.images.length > 0 && (
+                <div className="flex gap-2 flex-wrap">
+                  {newPost.images.map((url, index) => (
+                    <div key={index} className="relative">
+                      <img
+                        src={url}
+                        alt={`Preview ${index}`}
+                        className="h-20 w-20 object-cover rounded-lg"
+                      />
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setNewPost({
+                            ...newPost,
+                            images: newPost.images.filter(
+                              (_, i) => i !== index
+                            ),
+                          })
+                        }
+                        className="absolute top-0 right-0 bg-red-500 text-white rounded-full p-1"
+                      >
+                        <FaTimes size={12} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
 
               <div className="flex justify-end">
                 <button
@@ -357,7 +444,6 @@ const UserProfile = () => {
             </form>
           </div>
 
-          {/* Posts Grid */}
           <div className="grid grid-cols-1 gap-6">
             {posts.length === 0 ? (
               <div className="bg-white rounded-xl shadow-sm p-8 text-center border border-amber-100">
@@ -385,17 +471,49 @@ const UserProfile = () => {
                   key={post.id}
                   className="bg-white rounded-xl shadow-md overflow-hidden transition-all hover:shadow-lg border border-amber-100"
                 >
-                  {post.image && (
-                    <div className="relative h-64 overflow-hidden">
+                  {post.images && post.images.length > 0 ? (
+                    <div className="relative h-64">
                       <img
-                        src={
-                          post.image ||
-                          "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80"
-                        }
+                        src={post.images[currentSlide[post.id] || 0]}
                         alt={post.title}
                         className="w-full h-full object-cover"
                       />
-                      <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-t from-black/30 to-transparent"></div>
+                      {post.images.length > 1 && (
+                        <>
+                          <button
+                            onClick={() => handleSlideChange(post.id, "prev")}
+                            className="absolute left-2 top-1/2 transform -translate-y-1/2 bg-black/50 text-white p-2 rounded-full"
+                          >
+                            <FaChevronLeft />
+                          </button>
+                          <button
+                            onClick={() => handleSlideChange(post.id, "next")}
+                            className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-black/50 text-white p-2 rounded-full"
+                          >
+                            <FaChevronRight />
+                          </button>
+                          <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 flex gap-1">
+                            {post.images.map((_, index) => (
+                              <div
+                                key={index}
+                                className={`h-2 w-2 rounded-full ${
+                                  (currentSlide[post.id] || 0) === index
+                                    ? "bg-white"
+                                    : "bg-white/50"
+                                }`}
+                              ></div>
+                            ))}
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="relative h-64">
+                      <img
+                        src="https://icoconvert.com/images/noimage2.png"
+                        alt="Default"
+                        className="w-full h-full object-cover"
+                      />
                     </div>
                   )}
 
@@ -490,8 +608,6 @@ const UserProfile = () => {
           </div>
         </div>
 
-        {/* Edit Modal */}
-
         <dialog
           id="editModal"
           className="modal backdrop-blur-sm md:ml-120 rounded-2xl md:mt-20 fixed w-[600px] max-w-full"
@@ -512,7 +628,6 @@ const UserProfile = () => {
               onSubmit={handleEditPost}
               className="grid md:grid-cols-2 gap-6"
             >
-              {/* Left Column */}
               <div className="space-y-6">
                 <div className="space-y-1">
                   <label
@@ -535,41 +650,76 @@ const UserProfile = () => {
                 </div>
 
                 <div className="space-y-1">
-                  <label
-                    htmlFor="editImage"
-                    className="block text-sm font-medium text-amber-700"
-                  >
-                    Image URL (Optional)
+                  <label className="block text-sm font-medium text-amber-700">
+                    Images (Max 3)
                   </label>
-                  <input
-                    id="editImage"
-                    type="url"
-                    value={editingPost.image}
-                    onChange={(e) =>
-                      setEditingPost({ ...editingPost, image: e.target.value })
-                    }
-                    placeholder="https://example.com/your-recipe-photo.jpg"
-                    className="w-full px-4 py-3 border border-amber-200 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent text-amber-900"
-                  />
-                  {editingPost.image && (
-                    <div className="mt-2">
-                      <p className="text-xs text-amber-600 mb-1">
-                        Current Image Preview:
-                      </p>
-                      <img
-                        src={editingPost.image}
-                        alt="Recipe preview"
-                        className="h-24 object-cover rounded-lg border border-amber-200"
-                        onError={(e) => {
-                          e.target.style.display = "none";
-                        }}
-                      />
-                    </div>
-                  )}
+                  <div className="grid grid-cols-3 gap-2">
+                    {[0, 1, 2].map((index) => (
+                      <div key={index} className="relative">
+                        {editingPost.images[index] ? (
+                          <>
+                            <img
+                              src={editingPost.images[index]}
+                              alt={`Image ${index + 1}`}
+                              className="h-24 w-full object-cover rounded-lg border border-amber-200"
+                            />
+                            <button
+                              type="button"
+                              onClick={() =>
+                                setEditingPost({
+                                  ...editingPost,
+                                  images: editingPost.images.filter(
+                                    (_, i) => i !== index
+                                  ),
+                                })
+                              }
+                              className="absolute top-0 right-0 bg-red-500 text-white rounded-full p-1"
+                            >
+                              <FaTimes size={12} />
+                            </button>
+                            <input
+                              type="file"
+                              accept="image/*"
+                              onChange={(e) =>
+                                handleImageUpload(
+                                  e.target.files,
+                                  true,
+                                  index
+                                ).then((urls) =>
+                                  setEditingPost({
+                                    ...editingPost,
+                                    images: urls,
+                                  })
+                                )
+                              }
+                              className="absolute inset-0 opacity-0 cursor-pointer"
+                            />
+                          </>
+                        ) : (
+                          <div className="h-24 bg-amber-100 rounded-lg flex items-center justify-center">
+                            <input
+                              type="file"
+                              accept="image/*"
+                              onChange={(e) =>
+                                handleImageUpload(e.target.files, true).then(
+                                  (urls) =>
+                                    setEditingPost({
+                                      ...editingPost,
+                                      images: urls,
+                                    })
+                                )
+                              }
+                              className="w-full h-full opacity-0 cursor-pointer"
+                            />
+                            <span className="absolute text-amber-600">Add</span>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
 
-              {/* Right Column */}
               <div className="space-y-6">
                 <div className="space-y-1 h-full">
                   <label
@@ -595,7 +745,6 @@ const UserProfile = () => {
                 </div>
               </div>
 
-              {/* Form Buttons - span both columns */}
               <div className="modal-action flex justify-end gap-3 mt-4 md:col-span-2">
                 <button
                   type="button"

@@ -10,6 +10,7 @@ import CreateLearningPlan from "./components/CreateLearningPlan";
 import CommunityPage from "./components/CommunityPage";
 import ProfilePage from "./components/UserProfile";
 import UpdatePlanDetails from "./components/UpdateLearningPlan";
+import Explore from "./components/Explore";
 
 import "./index.css";
 
@@ -40,6 +41,7 @@ function App() {
             path="/create-learning-plan"
             element={<CreateLearningPlan />}
           />
+          <Route path="/explore" element={<Explore />} />
         </Routes>
       </>
     </Router>

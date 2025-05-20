@@ -7,6 +7,7 @@ import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import Footer from "./footer";
 import LoadingSpinner from "../components/LoadingSpinner";
+import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
 
 const Home = () => {
   const [username, setUsername] = useState("");
@@ -27,6 +28,7 @@ const Home = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(null);
+  const [currentSlide, setCurrentSlide] = useState({});
   const navigate = useNavigate();
 
   const usersToFollow = [
@@ -101,8 +103,16 @@ const Home = () => {
               ),
             ]);
 
+          // Ensure images is an array
+          const images = Array.isArray(post.images)
+            ? post.images
+            : post.image
+            ? [post.image]
+            : [];
+
           return {
             ...post,
+            images,
             likeCount: likesResponse.data,
             comments: commentsResponse.data,
             likedByUser: userLikeResponse.data.liked,
@@ -122,6 +132,7 @@ const Home = () => {
 
     if (!token || !username) {
       console.error("Token or Username is missing!");
+      toast.error("Please log in to like posts.");
       return;
     }
 
@@ -138,10 +149,13 @@ const Home = () => {
         }
       );
       fetchPublicPosts();
+      toast.success("Like updated!");
     } catch (error) {
       console.error("Error toggling like:", error);
       if (error.response?.status === 403) {
-        alert("You are not authorized to like this post.");
+        toast.error("You are not authorized to like this post.");
+      } else {
+        toast.error("Failed to update like.");
       }
     }
   };
@@ -162,9 +176,10 @@ const Home = () => {
       setFoodCommunities([...foodCommunities, response.data]);
       setNewCommunity({ name: "", description: "" });
       setShowForm(false);
+      toast.success("Community created successfully!");
     } catch (error) {
       console.error("Error creating community:", error);
-      alert("Failed to create the community. Please try again later.");
+      toast.error("Failed to create the community. Please try again later.");
     }
   };
 
@@ -176,7 +191,7 @@ const Home = () => {
     e.preventDefault();
 
     if (!commentContent.trim()) {
-      alert("Please enter a comment.");
+      toast.error("Please enter a comment.");
       return;
     }
 
@@ -185,7 +200,7 @@ const Home = () => {
     const username = localStorage.getItem("username");
 
     if (!username || !userId) {
-      alert("User information is missing. Please log in again.");
+      toast.error("User information is missing. Please log in again.");
       return;
     }
 
@@ -288,8 +303,24 @@ const Home = () => {
     setCommentContent(e.target.value);
   };
 
+  const handleSlideChange = (postId, direction) => {
+    const post = publicPosts.find((p) => p.id === postId);
+    if (!post || !post.images.length) return;
+
+    const currentIndex = currentSlide[postId] || 0;
+    let newIndex;
+
+    if (direction === "next") {
+      newIndex = (currentIndex + 1) % post.images.length;
+    } else {
+      newIndex = (currentIndex - 1 + post.images.length) % post.images.length;
+    }
+
+    setCurrentSlide((prev) => ({ ...prev, [postId]: newIndex }));
+  };
+
   if (isLoading) {
-    return <LoadingSpinner message="Logging you in..." />;
+    return <LoadingSpinner message="Loading posts..." />;
   }
 
   return (
@@ -355,7 +386,6 @@ const Home = () => {
                     </li>
                   ))}
                 </ul>
-                آمریک{" "}
               </div>
             </div>
 
@@ -397,13 +427,51 @@ const Home = () => {
                       </div>
                     </div>
 
-                    {/* Post Image */}
-                    {post.image && (
-                      <img
-                        src={post.image}
-                        alt={post.title}
-                        className="w-full h-72 object-cover"
-                      />
+                    {/* Post Images */}
+                    {post.images && post.images.length > 0 ? (
+                      <div className="relative h-72">
+                        <img
+                          src={post.images[currentSlide[post.id] || 0]}
+                          alt={post.title}
+                          className="w-full h-full object-cover"
+                        />
+                        {post.images.length > 1 && (
+                          <>
+                            <button
+                              onClick={() => handleSlideChange(post.id, "prev")}
+                              className="absolute left-2 top-1/2 transform -translate-y-1/2 bg-black/50 text-white p-2 rounded-full"
+                            >
+                              <FaChevronLeft />
+                            </button>
+                            <button
+                              onClick={() => handleSlideChange(post.id, "next")}
+                              className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-black/50 text-white p-2 rounded-full"
+                            >
+                              <FaChevronRight />
+                            </button>
+                            <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 flex gap-1">
+                              {post.images.map((_, index) => (
+                                <div
+                                  key={index}
+                                  className={`h-2 w-2 rounded-full ${
+                                    (currentSlide[post.id] || 0) === index
+                                      ? "bg-white"
+                                      : "bg-white/50"
+                                  }`}
+                                ></div>
+                              ))}
+                            </div>
+                          </>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="relative h-72">
+                        <img
+                          src="https://images.unsplash.com/photo-1546069901-ba9599a7e63c?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80"
+                          alt="Default"
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
                     )}
 
                     {/* Post Content */}
@@ -798,7 +866,7 @@ const Home = () => {
                   >
                     <path
                       fillRule="evenodd"
-                      d="M STREAMING 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z"
+                      d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z"
                       clipRule="evenodd"
                     />
                   </svg>

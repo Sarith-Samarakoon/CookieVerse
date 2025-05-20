@@ -152,8 +152,79 @@ const CreateLearningPlan = () => {
               )}
             </div>
           </section>
+          {/* Plan Steps */}
+          <section>
+            <h3 className="text-2xl font-semibold text-[#4B5563] mb-6">
+              📚 Plan Topics & Resources
+            </h3>
 
-          
+            <div className="space-y-8">
+              {plan.steps.map((step, index) => (
+                <div
+                  key={index}
+                  className="border border-orange-200 rounded-xl p-6 bg-orange-50 relative space-y-4"
+                >
+                  <div className="flex items-center justify-between">
+                    <h4 className="font-bold text-gray-700">
+                      Step {index + 1}
+                    </h4>
+                    {plan.steps.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => removeStep(index)}
+                        className="text-red-500 hover:text-red-700 text-sm"
+                      >
+                        Remove
+                      </button>
+                    )}
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <input
+                      type="text"
+                      placeholder="Topic Name"
+                      value={step.topic}
+                      onChange={(e) =>
+                        handleStepChange(index, "topic", e.target.value)
+                      }
+                      className="p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-300"
+                      required
+                    />
+                    <input
+                      type="text"
+                      placeholder="Resources (links, books, videos)"
+                      value={step.resources}
+                      onChange={(e) =>
+                        handleStepChange(index, "resources", e.target.value)
+                      }
+                      className="p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-300"
+                      required
+                    />
+                    <input
+                      type="text"
+                      placeholder="Estimated Timeline (e.g., 1 week)"
+                      value={step.timeline}
+                      onChange={(e) =>
+                        handleStepChange(index, "timeline", e.target.value)
+                      }
+                      className="p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-300 col-span-2"
+                      required
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="mt-8 text-right">
+              <button
+                type="button"
+                onClick={addStep}
+                className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+              >
+                ➕ Add Another Topic
+              </button>
+            </div>
+          </section>
 
           {/* Action Buttons */}
           <div className="flex justify-end gap-4 pt-8">
