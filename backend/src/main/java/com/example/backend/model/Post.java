@@ -2,6 +2,8 @@ package com.example.backend.model;
 
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
+import java.util.ArrayList;
+import java.util.List;
 
 @Document(collection = "posts")
 public class Post {
@@ -10,21 +12,23 @@ public class Post {
     private String id;
     private String title;
     private String content;
-    private String image;
+    private List<String> images; // Changed from String image to List<String> images
     private boolean isPublic;
     private String userEmail;
     private int likeCount;
     private boolean likedByUser;
 
-    public Post() {}
+    public Post() {
+        this.images = new ArrayList<>();
+    }
 
-    public Post(String title, String content, String image, boolean isPublic, String userEmail) {
+    public Post(String title, String content, List<String> images, boolean isPublic, String userEmail) {
         this.title = title;
         this.content = content;
-        this.image = image;
+        this.images = images != null ? images : new ArrayList<>();
         this.isPublic = isPublic;
         this.userEmail = userEmail;
-        this.likeCount = 0;  // Initialize like count
+        this.likeCount = 0;
         this.likedByUser = false;
     }
 
@@ -37,8 +41,8 @@ public class Post {
     public String getContent() { return content; }
     public void setContent(String content) { this.content = content; }
 
-    public String getImage() { return image; }
-    public void setImage(String image) { this.image = image; }
+    public List<String> getImages() { return images; }
+    public void setImages(List<String> images) { this.images = images != null ? images : new ArrayList<>(); }
 
     public boolean getIsPublic() { return isPublic; }
     public void setIsPublic(boolean isPublic) { this.isPublic = isPublic; }
@@ -46,19 +50,9 @@ public class Post {
     public String getUserEmail() { return userEmail; }
     public void setUserEmail(String userEmail) { this.userEmail = userEmail; }
 
-    public int getLikeCount() {
-        return likeCount;
-    }
+    public int getLikeCount() { return likeCount; }
+    public void setLikeCount(int likeCount) { this.likeCount = likeCount; }
 
-    public void setLikeCount(int likeCount) {
-        this.likeCount = likeCount;
-    }
-
-    public boolean isLikedByUser() {
-        return likedByUser;
-    }
-
-    public void setLikedByUser(boolean likedByUser) {
-        this.likedByUser = likedByUser;
-    }
+    public boolean isLikedByUser() { return likedByUser; }
+    public void setLikedByUser(boolean likedByUser) { this.likedByUser = likedByUser; }
 }

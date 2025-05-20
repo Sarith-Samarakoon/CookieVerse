@@ -25,7 +25,6 @@ public class PostService {
     @Autowired
     private UserRepository userRepository;
 
-    // Get posts by email
     public List<PostDTO> getPostsByUserEmail(String email) {
         List<Post> posts = postRepository.findByUserEmail(email);
 
@@ -38,14 +37,13 @@ public class PostService {
             postDTO.setUserEmail(post.getUserEmail());
             postDTO.setTitle(post.getTitle());
             postDTO.setContent(post.getContent());
-            postDTO.setImage(post.getImage());
+            postDTO.setImages(post.getImages());
             postDTO.setIsPublic(post.getIsPublic());
             postDTO.setUsername(username);
             return postDTO;
         }).collect(Collectors.toList());
     }
 
-    // Get only public posts
     public List<PostDTO> getPublicPosts() {
         List<Post> posts = postRepository.findByIsPublicTrue();
 
@@ -58,14 +56,13 @@ public class PostService {
             postDTO.setUserEmail(post.getUserEmail());
             postDTO.setTitle(post.getTitle());
             postDTO.setContent(post.getContent());
-            postDTO.setImage(post.getImage());
+            postDTO.setImages(post.getImages());
             postDTO.setIsPublic(post.getIsPublic());
             postDTO.setUsername(username);
             return postDTO;
         }).collect(Collectors.toList());
     }
 
-    // Create a post for the logged-in user
     public Post createPost(PostDTO dto) {
         if (dto.getUserEmail() == null || dto.getUserEmail().isEmpty()) {
             throw new IllegalArgumentException("User email is required to create a post.");
@@ -75,72 +72,55 @@ public class PostService {
         post.setUserEmail(dto.getUserEmail());
         post.setTitle(dto.getTitle());
         post.setContent(dto.getContent());
-        post.setImage(dto.getImage());
-        post.setIsPublic(dto.getIsPublic()); // Corrected here!
+        post.setImages(dto.getImages());
+        post.setIsPublic(dto.getIsPublic());
 
         return postRepository.save(post);
     }
 
-
-    // Delete a post
     public void deletePost(String postId, String userEmail) {
         Optional<Post> postOptional = postRepository.findById(postId);
         if (postOptional.isPresent()) {
             Post post = postOptional.get();
-    
-            // Ensure only the owner can delete their post
             if (!post.getUserEmail().equals(userEmail)) {
                 throw new AccessDeniedException("You do not have permission to delete this post.");
             }
-    
             postRepository.deleteById(postId);
         } else {
             throw new PostNotFoundException("Post not found with id: " + postId);
         }
     }
 
-    
-// Update post
-public Post updatePost(String postId, PostDTO updatedDto, String userEmail) {
-    Optional<Post> postOptional = postRepository.findById(postId);
-    if (postOptional.isPresent()) {
-        Post post = postOptional.get();
-
-        // Ensure only the owner can update their post
-        if (!post.getUserEmail().equals(userEmail)) {
-            throw new AccessDeniedException("You do not have permission to update this post.");
-        }
-
-        // Update fields
-        post.setTitle(updatedDto.getTitle());
-        post.setContent(updatedDto.getContent());
-        post.setImage(updatedDto.getImage());
-        post.setIsPublic(updatedDto.getIsPublic());
-
-        return postRepository.save(post);
-    } else {
-        throw new PostNotFoundException("Post not found with id: " + postId);
-    }
-}
-
-    // Update visibility of the post
-    public Post updateVisibility(String postId, boolean isPublic) {
+    public Post updatePost(String postId, PostDTO updatedDto, String userEmail) {
         Optional<Post> postOptional = postRepository.findById(postId);
         if (postOptional.isPresent()) {
             Post post = postOptional.get();
-            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-            String loggedInUserEmail = authentication.getName();
-
-            if (!post.getUserEmail().equals(loggedInUserEmail)) {
+            if (!post.getUserEmail().equals(userEmail)) {
                 throw new AccessDeniedException("You do not have permission to update this post.");
             }
-
-            post.setIsPublic(isPublic);
+            post.setTitle(updatedDto.getTitle());
+            post.setContent(updatedDto.getContent());
+            post.setImages(updatedDto.getImages());
+            post.setIsPublic(updatedDto.getIsPublic());
             return postRepository.save(post);
         } else {
             throw new PostNotFoundException("Post not found with id: " + postId);
         }
     }
 
-
+    public Post updateVisibility(String postId, boolean isPublic) {
+        Optional<Post> postOptional = postRepository.findById(postId);
+        if (postOptional.isPresent()) {
+            Post post = postOptional.get();
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            String loggedInUserEmail = authentication.getName();
+            if (!post.getUserEmail().equals(loggedInUserEmail)) {
+                throw new AccessDeniedException("You do not have permission to update this post.");
+            }
+            post.setIsPublic(isPublic);
+            return postRepository.save(post);
+        } else {
+            throw new PostNotFoundException("Post not found with id: " + postId);
+        }
+    }
 }
