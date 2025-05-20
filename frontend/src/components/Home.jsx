@@ -4,6 +4,7 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { formatDistanceToNow } from "date-fns";
 import { toast } from "react-toastify";
+import { jwtDecode } from "jwt-decode"; // ✅ correct usage
 
 const Home = () => {
   const [username, setUsername] = useState("");
@@ -150,11 +151,35 @@ const Home = () => {
 
   const handleFormSubmit = async (e) => {
     e.preventDefault();
+
     try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        alert("User not authenticated.");
+        return;
+      }
+
+      // Decode the token to get user data
+      const decoded = jwtDecode(token);
+      const userId = decoded.sub || decoded.id; // depends on how your backend encodes it
+      const username = decoded.username || decoded.preferred_username; // adjust based on your backend
+
+      const communityPayload = {
+        ...newCommunity,
+        createdBy: userId,
+        createdByUsername: username,
+      };
+
       const response = await axios.post(
         "http://localhost:8080/api/communities",
-        newCommunity
+        communityPayload,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
       );
+
       setFoodCommunities([...foodCommunities, response.data]);
       setNewCommunity({ name: "", description: "" });
       setShowForm(false);
