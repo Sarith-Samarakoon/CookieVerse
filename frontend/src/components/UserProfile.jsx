@@ -281,7 +281,11 @@ const UserProfile = () => {
       <Navbar />
       <ToastContainer position="top-right" autoClose={3000} />
       <div className="min-h-screen bg-amber-50 pb-20">
-        <div className="bg-gradient-to-r from-amber-400 to-amber-500 pt-16 pb-24 px-4 sm:px-6 lg:px-8">
+       <div
+  className="pt-16 pb-24 px-4 sm:px-6 lg:px-8 bg-cover bg-center"
+  style={{ backgroundImage: "url('https://as2.ftcdn.net/jpg/03/51/66/91/1000_F_351669115_4iLy8aCtGa8W9WefgV4QZb2BDUe4j6bd.jpg')" }}
+>
+
           <div className="max-w-4xl mx-auto">
             <div className="flex flex-col md:flex-row items-center gap-6 relative">
               <div className="relative -mt-16">
@@ -304,21 +308,21 @@ const UserProfile = () => {
                 </p>
 
                 <div className="flex gap-4 mt-4 justify-center md:justify-start">
-                  <div className="bg-white/20 backdrop-blur-sm rounded-lg px-4 py-2 text-white flex items-center gap-2">
+                  <div className="bg-white/20 backdrop-blur-sm rounded-lg px-8 py-4 text-white flex items-center gap-2">
                     <GiCook className="text-xl" />
                     <div>
                       <p className="font-bold">{posts.length}</p>
                       <p className="text-sm">Recipes</p>
                     </div>
                   </div>
-                  <div className="bg-white/20 backdrop-blur-sm rounded-lg px-4 py-2 text-white flex items-center gap-2">
+                  <div className="bg-white/20 backdrop-blur-sm rounded-lg px-8 py-4 text-white flex items-center gap-2">
                     <FaHeart className="text-xl" />
                     <div>
                       <p className="font-bold">1.2K</p>
                       <p className="text-sm">Followers</p>
                     </div>
                   </div>
-                  <div className="bg-white/20 backdrop-blur-sm rounded-lg px-4 py-2 text-white flex items-center gap-2">
+                  <div className="bg-white/20 backdrop-blur-sm rounded-lg px-8 py-4 text-white flex items-center gap-2">
                     <GiMeal className="text-xl" />
                     <div>
                       <p className="font-bold">356</p>
@@ -337,8 +341,8 @@ const UserProfile = () => {
               onClick={() => setActiveTab("posts")}
               className={`px-4 py-3 font-medium text-sm flex items-center gap-2 ${
                 activeTab === "posts"
-                  ? "text-amber-600 border-b-2 border-amber-600"
-                  : "text-amber-800 hover:text-amber-600"
+                  ? "text-white border-b-2 border-amber-600"
+                  : "text-white hover:text-amber-400"
               }`}
             >
               <FaUtensils /> My Recipes
@@ -347,8 +351,8 @@ const UserProfile = () => {
               onClick={() => setActiveTab("saved")}
               className={`px-4 py-3 font-medium text-sm flex items-center gap-2 ${
                 activeTab === "saved"
-                  ? "text-amber-600 border-b-2 border-amber-600"
-                  : "text-amber-800 hover:text-amber-600"
+                  ? "text-white border-b-2 border-amber-600"
+                  : "text-white hover:text-amber-400"
               }`}
             >
               <FaBookmark /> Saved Recipes
