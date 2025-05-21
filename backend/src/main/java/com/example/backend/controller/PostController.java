@@ -10,7 +10,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/api/posts")
@@ -19,59 +18,63 @@ public class PostController {
     @Autowired
     private PostService postService;
 
-        // Get all posts for the logged-in user
-        @GetMapping("/byLoggedInUser")
-        public List<PostDTO> getUserPostsByLoggedInUser() {
-            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-            String userEmail = authentication.getName();
-            return postService.getPostsByUserEmail(userEmail);
-        }
-
-    // Create a post for the logged-in user
-    @PostMapping
-    public Post createPost(@RequestBody PostDTO dto) {
+    @GetMapping("/byLoggedInUser")
+    public ResponseEntity<List<PostDTO>> getPostsByLoggedInUser() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String userEmail = authentication.getName();
-        dto.setUserEmail(userEmail);
-        return postService.createPost(dto);
+        List<PostDTO> posts = postService.getPostsByUserEmail(userEmail);
+        return ResponseEntity.ok(posts);
     }
 
+    @GetMapping("/public")
+    public ResponseEntity<List<PostDTO>> getPublicPosts() {
+        List<PostDTO> posts = postService.getPublicPosts();
+        return ResponseEntity.ok(posts);
+    }
 
-    // Update the visibility of a post
-    @PutMapping("/{id}/visibility")
-    public ResponseEntity<Post> updateVisibility(@PathVariable String id, @RequestBody Map<String, Boolean> body) {
-        Boolean isPublic = body.get("isPublic");
-        if (isPublic == null) {
+    @PostMapping
+    public ResponseEntity<Post> createPost(@RequestBody PostDTO dto) {
+        try {
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            dto.setUserEmail(authentication.getName());
+            Post createdPost = postService.createPost(dto);
+            return ResponseEntity.ok(createdPost);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(null);
+        }
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<Post> updatePost(@PathVariable String id, @RequestBody PostDTO dto) {
+        try {
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            String userEmail = authentication.getName();
+            Post updatedPost = postService.updatePost(id, dto, userEmail);
+            return ResponseEntity.ok(updatedPost);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(null);
+        }
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deletePost(@PathVariable String id) {
+        try {
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            String userEmail = authentication.getName();
+            postService.deletePost(id, userEmail);
+            return ResponseEntity.ok().build();
+        } catch (Exception e) {
             return ResponseEntity.badRequest().build();
         }
-        Post updatedPost = postService.updateVisibility(id, isPublic);
-        return ResponseEntity.ok(updatedPost);
     }
 
-    // Get only public posts for the home page
-    @GetMapping("/public")
-    public List<PostDTO> getPublicPosts() {
-        return postService.getPublicPosts();
+    @PutMapping("/{id}/visibility")
+    public ResponseEntity<Post> updateVisibility(@PathVariable String id, @RequestBody PostDTO dto) {
+        try {
+            Post updatedPost = postService.updateVisibility(id, dto.getIsPublic());
+            return ResponseEntity.ok(updatedPost);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(null);
+        }
     }
-
- 
-        // Delete a post by ID
-@DeleteMapping("/{id}")
-public ResponseEntity<Void> deletePost(@PathVariable String id) {
-    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-    String userEmail = authentication.getName();
-    postService.deletePost(id, userEmail);
-    return ResponseEntity.noContent().build();
-}
-
-
-// Update a post (title, content, image, etc.)
-@PutMapping("/{id}")
-public ResponseEntity<Post> updatePost(@PathVariable String id, @RequestBody PostDTO updatedDto) {
-    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-    String userEmail = authentication.getName();
-    Post updatedPost = postService.updatePost(id, updatedDto, userEmail);
-    return ResponseEntity.ok(updatedPost);
-}
-
 }
