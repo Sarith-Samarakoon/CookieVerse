@@ -4,7 +4,15 @@ import axios from "axios";
 import Navbar from "./Navbar";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import LoadingSpinner from "./LoadingSpinner"; // You should create this component
+import LoadingSpinner from "./LoadingSpinner";
+import { createClient } from "@supabase/supabase-js";
+
+// Initialize Supabase client (replace with your Supabase URL and anon key)
+const supabaseUrl = "https://ikooiqeerabavauzgeeo.supabase.co";
+const supabaseKey =
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlrb29pcWVlcmFiYXZhdXpnZWVvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQ1MzQ3OTMsImV4cCI6MjA2MDExMDc5M30.ao4h_29v83Fyt6l2GfMN60zsj69JYy6nScmaaoCyqzo";
+
+const supabase = createClient(supabaseUrl, supabaseKey);
 
 const CommunityPage = () => {
   const { id } = useParams();
@@ -19,12 +27,12 @@ const CommunityPage = () => {
   const [newPost, setNewPost] = useState({
     author: "",
     content: "",
-    image: "",
+    image: null, // Changed from string to null for file input
   });
   const [isLoading, setIsLoading] = useState(true);
   const [isProcessing, setIsProcessing] = useState(false);
   const navigate = useNavigate();
-  const currentUser = localStorage.getItem("username"); // Get the logged-in username
+  const currentUser = localStorage.getItem("username");
 
   useEffect(() => {
     const fetchData = async () => {
@@ -65,7 +73,7 @@ const CommunityPage = () => {
   };
 
   const handleJoinCommunity = async () => {
-    const userName = localStorage.getItem("username"); // or use the context if you have one
+    const userName = localStorage.getItem("username");
     if (!userName) {
       toast.error("You must be logged in to join a community.");
       return;
@@ -75,11 +83,8 @@ const CommunityPage = () => {
       await axios.post(
         `http://localhost:8080/api/communities/${id}/join`,
         null,
-        {
-          params: { userName },
-        }
+        { params: { userName } }
       );
-
       toast.success("You have joined the community!");
       fetchCommunity();
     } catch (err) {
@@ -89,7 +94,7 @@ const CommunityPage = () => {
   };
 
   const handleLeaveCommunity = async () => {
-    const userName = localStorage.getItem("username"); // Ensure user is logged in
+    const userName = localStorage.getItem("username");
     if (!userName) {
       toast.error("You must be logged in to leave a community.");
       return;
@@ -98,7 +103,7 @@ const CommunityPage = () => {
     const confirmation = window.confirm(
       "Are you sure you want to leave this community?"
     );
-    if (!confirmation) return; // Prevent action if user cancels
+    if (!confirmation) return;
 
     try {
       await axios.post(
@@ -106,9 +111,8 @@ const CommunityPage = () => {
         null,
         { params: { userName } }
       );
-
       toast.success("You have left the community.");
-      fetchCommunity(); // Refresh community data after leaving
+      fetchCommunity();
     } catch (err) {
       console.error("Error leaving community:", err);
       toast.error("An error occurred while trying to leave the community.");
@@ -123,16 +127,48 @@ const CommunityPage = () => {
 
     try {
       setIsProcessing(true);
+      let imageUrl = "";
+
+      // Upload image to Supabase if present
+      if (newPost.image && community?.name) {
+        const fileExt = newPost.image.name.split(".").pop();
+        const fileName = `${Date.now()}-${Math.random()
+          .toString(36)
+          .substring(2, 15)}.${fileExt}`;
+        // Use sanitized community name as folder
+        const sanitizedCommunityName = community.name
+          .replace(/[^a-zA-Z0-9-_]/g, "_")
+          .toLowerCase();
+        const filePath = `${sanitizedCommunityName}/${fileName}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from("foodies")
+          .upload(filePath, newPost.image);
+
+        if (uploadError) {
+          throw new Error(`Image upload failed: ${uploadError.message}`);
+        }
+
+        // Get public URL for the uploaded image
+        const { data: urlData } = supabase.storage
+          .from("foodies")
+          .getPublicUrl(filePath);
+        imageUrl = urlData.publicUrl;
+      }
+
       const post = {
-        ...newPost,
+        author: newPost.author,
+        content: newPost.content,
+        image: imageUrl,
         date: new Date().toISOString().split("T")[0],
         likes: 0,
       };
+
       await axios.post(
         `http://localhost:8080/api/communities/${id}/posts`,
         post
       );
-      setNewPost({ author: "", content: "", image: "" });
+      setNewPost({ author: "", content: "", image: null });
       setShowForm(false);
       toast.success("Post published successfully!");
       fetchPosts();
@@ -145,33 +181,29 @@ const CommunityPage = () => {
   };
 
   const handleLike = async (postId) => {
-    const userName = localStorage.getItem("username"); // Retrieve the logged-in username from localStorage
+    const userName = localStorage.getItem("username");
     if (!userName) {
       toast.error("You must be logged in to like or unlike a post.");
       return;
     }
 
     try {
-      const post = posts.find((p) => p.id === postId); // Find the specific post by its ID
-
+      const post = posts.find((p) => p.id === postId);
       if (!post) {
         toast.error("Post not found.");
         return;
       }
 
-      // Check if the user has already liked the post
       const hasLiked = post.likedBy && post.likedBy.includes(userName);
 
       if (hasLiked) {
-        // Unlike the post
         await axios.post(
-          `http://localhost:8080/api/communities/${id}/posts/${postId}/unlike`, // Use a new endpoint for unliking
+          `http://localhost:8080/api/communities/${id}/posts/${postId}/unlike`,
           null,
           { params: { userName } }
         );
         toast.info("You have unliked this post.");
       } else {
-        // Like the post
         await axios.post(
           `http://localhost:8080/api/communities/${id}/posts/${postId}/like`,
           null,
@@ -180,7 +212,7 @@ const CommunityPage = () => {
         toast.success("You have liked this post.");
       }
 
-      fetchPosts(); // Refresh the posts
+      fetchPosts();
     } catch (error) {
       console.error("Error toggling like:", error);
       toast.error("An error occurred while toggling the like.");
@@ -244,7 +276,12 @@ const CommunityPage = () => {
   };
 
   const handleChange = (e) => {
-    setNewPost({ ...newPost, [e.target.name]: e.target.value });
+    const { name, value, files } = e.target;
+    if (name === "image") {
+      setNewPost({ ...newPost, image: files[0] });
+    } else {
+      setNewPost({ ...newPost, [name]: value });
+    }
   };
 
   const handleEditChange = (e) => {
@@ -365,7 +402,6 @@ const CommunityPage = () => {
                           {community.description}
                         </p>
                       </div>
-                      {/* Conditionally render Edit/Delete buttons */}
                       {currentUser === community.createdByUsername && (
                         <div className="flex space-x-2">
                           <button
@@ -597,14 +633,13 @@ const CommunityPage = () => {
                           htmlFor="image"
                           className="block text-sm font-medium text-gray-700 mb-1"
                         >
-                          Image URL (optional)
+                          Upload Image (optional)
                         </label>
                         <input
-                          type="url"
+                          type="file"
                           id="image"
                           name="image"
-                          placeholder="https://example.com/image.jpg"
-                          value={newPost.image}
+                          accept="image/*"
                           onChange={handleChange}
                           className="w-full p-2 border rounded focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
                         />
@@ -612,9 +647,11 @@ const CommunityPage = () => {
                       <div className="flex justify-end">
                         <button
                           onClick={handleAddPost}
-                          disabled={!newPost.author || !newPost.content}
+                          disabled={
+                            !newPost.author || !newPost.content || isProcessing
+                          }
                           className={`flex items-center bg-[#10B981] text-white px-4 py-2 rounded hover:bg-[#059669] transition-colors ${
-                            !newPost.author || !newPost.content
+                            !newPost.author || !newPost.content || isProcessing
                               ? "opacity-50 cursor-not-allowed"
                               : ""
                           }`}
@@ -812,7 +849,7 @@ const CommunityPage = () => {
                   >
                     <path
                       fillRule="evenodd"
-                      d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z"
+                      d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zM9 9h2v2H9V9zM15 9h-2v2h2V9z"
                       clipRule="evenodd"
                     />
                   </svg>
