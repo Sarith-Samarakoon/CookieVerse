@@ -131,8 +131,7 @@ const CreateLearningPlan = () => {
   };
 
   return (
-    <>
-      {" "}
+    <div>
       <ToastContainer
         position="top-right"
         autoClose={3000}
@@ -317,7 +316,8 @@ const CreateLearningPlan = () => {
             </div>
           </form>
         </div>
-    </>
+      </div>
+    </div>
   );
 };
 
