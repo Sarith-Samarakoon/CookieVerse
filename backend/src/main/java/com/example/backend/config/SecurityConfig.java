@@ -42,6 +42,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/posts/**").permitAll() // <--- add this line
                         .requestMatchers("/api/learningplans/**").permitAll() // <--- add this line
                         .requestMatchers("/api/likecomment/**").permitAll() // <--- add this line
+                        .requestMatchers("/api/status/**").permitAll()
 
                         .anyRequest().authenticated() // Everything else needs auth
                 )
