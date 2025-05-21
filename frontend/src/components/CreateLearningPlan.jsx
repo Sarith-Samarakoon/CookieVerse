@@ -317,7 +317,6 @@ const CreateLearningPlan = () => {
             </div>
           </form>
         </div>
-      </div>
     </>
   );
 };

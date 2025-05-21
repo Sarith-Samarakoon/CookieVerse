@@ -2,6 +2,7 @@ package com.example.backend.model;
 
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -15,7 +16,8 @@ public class FoodCommunity {
 
     private List<String> members = new ArrayList<>();
 
-    private String createdBy;
+    private String createdBy; // User ID or email
+    private String createdByUsername; // Store the username
 
     // Getters and setters
     public String getId() {
@@ -58,7 +60,15 @@ public class FoodCommunity {
         this.createdBy = createdBy;
     }
 
-    // Method to clean up the members when the community is deleted
+    public String getCreatedByUsername() {
+        return createdByUsername;
+    }
+
+    public void setCreatedByUsername(String createdByUsername) {
+        this.createdByUsername = createdByUsername;
+    }
+
+    // Utility method
     public void cleanUpMembers() {
         this.members.clear();  // Remove all members from the list
     }
