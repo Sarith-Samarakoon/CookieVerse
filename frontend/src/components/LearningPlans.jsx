@@ -36,11 +36,16 @@ const LearningPlans = () => {
   };
 
   const handleDeletePlan = async (id) => {
-    if (
-      !window.confirm("Are you sure you want to delete this learning plan?")
-    ) {
+    const confirmed = window.confirm(
+      "Are you sure you want to delete this learning plan?"
+    );
+    if (!confirmed) {
+      toast.info("Deletion cancelled.");
       return;
     }
+
+    const toastId = toast.loading("Deleting learning plan...");
+
     try {
       const response = await fetch(
         `http://localhost:8080/api/learningplans/${id}`,
@@ -48,15 +53,33 @@ const LearningPlans = () => {
           method: "DELETE",
         }
       );
+
       if (response.status === 204) {
-        setLearningPlans(learningPlans.filter((plan) => plan.id !== id));
-        toast.success("Learning plan deleted successfully.");
+        setLearningPlans((prevPlans) =>
+          prevPlans.filter((plan) => plan.id !== id)
+        );
+        toast.update(toastId, {
+          render: "Learning plan deleted successfully.",
+          type: "success",
+          isLoading: false,
+          autoClose: 3000,
+        });
       } else {
-        toast.error("Failed to delete the learning plan. Please try again.");
+        toast.update(toastId, {
+          render: "Failed to delete the learning plan. Please try again.",
+          type: "error",
+          isLoading: false,
+          autoClose: 3000,
+        });
       }
     } catch (error) {
       console.error("Error deleting learning plan:", error);
-      toast.error("An error occurred while deleting. Please try again.");
+      toast.update(toastId, {
+        render: "An error occurred while deleting. Please try again.",
+        type: "error",
+        isLoading: false,
+        autoClose: 3000,
+      });
     }
   };
 
